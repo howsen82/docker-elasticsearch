@@ -4,7 +4,9 @@ services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     container_name: elasticsearch
+    restart: always
     environment:
+      - xpack.security.enabled=false
       - discovery.type=single-node
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
     ulimits:
@@ -21,10 +23,15 @@ services:
     ports:
       - 9200:9200
       - 9300:9300
+    networks:
+      - es-net
 
   kibana:
     container_name: kibana
     image: docker.elastic.co/kibana/kibana:${STACK_VERSION}
+    restart: always
+    volumes:
+      - kibana-data:/usr/share/kibana/data
     environment:
       - SERVERNAME=kibana
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
@@ -34,7 +41,17 @@ services:
       - 5601:5601
     depends_on:
       - elasticsearch
+    networks:
+      - es-net
 
 volumes:
   elasticsearch-data:
     driver: local
+  kibana-data:
+    driver: local
+
+networks:
+  es-net:
+    driver: bridge
+
+# docker-compose up -d
